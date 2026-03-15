@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import rescate.demo.domain.Mascota;
 import rescate.demo.service.MascotaService;
+import org.springframework.validation.BindingResult;
 
 /**
  *
@@ -49,17 +50,21 @@ public class MascotaController {
     }
 
     @PostMapping("/guardar")
-    public String guardar(@Valid Mascota mascota,
-            @RequestParam MultipartFile imagenFile,
-            RedirectAttributes redirectAttributes) {
+    public String guardar(@Valid Mascota mascota, 
+                         BindingResult bindingResult, // Atrapa los errores de validación
+                         @RequestParam MultipartFile imagenFile, 
+                         RedirectAttributes redirectAttributes,
+                         Model model) { // Agregado para devolver datos si hay error
+
+        if (bindingResult.hasErrors()) {
+            // Si hay error (ej: nombre vacío), regresa al formulario sin guardar
+            return "/mascota/modifica"; 
+        }
 
         mascotaService.save(mascota, imagenFile);
 
-        redirectAttributes.addFlashAttribute(
-                "todoOk",
-                messageSource.getMessage("mensaje.actualizado",
-                        null,
-                        Locale.getDefault()));
+        redirectAttributes.addFlashAttribute("todoOk",
+                messageSource.getMessage("mensaje.actualizado", null, Locale.getDefault()));
 
         return "redirect:/mascota/listado";
     }
